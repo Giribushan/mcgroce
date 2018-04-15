@@ -3,12 +3,34 @@ import cv2
 import cv2 as cv
 from matplotlib import pyplot as plt
 
-# change the name as per the product 
-product_name = "goodday_orange"
+def addAlpha(img):
+    # Adding the alpha channel
+    tmp2 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    _,alpha2 = cv2.threshold(tmp2,0,255,cv2.THRESH_BINARY) 
+    b, g, r = cv2.split(img) 
+    rgba = [b,g,r, alpha2] 
+    img = cv2.merge(rgba,4)
+    return img
 
-img = cv2.imread("C:\\Users\\gcheru200\\Pictures\\others\\image4.jpg")
+# change the name as per the product 
+product_name = "ChocolateCake"
+
+#img = cv2.imread("C:\\Users\\gcheru200\\Pictures\\others\\image4.jpg")
+
+#This is the original input image
+img2 = cv2.imread("C:\\Users\\gcheru200\\Pictures\\chocCake\\ChocCake1.png")
+# Perfrom edge detection
+img2WithEdges = cv2.Canny(img2, 0, 255)
+cv2.imwrite("C:\\Users\\gcheru200\\Pictures\\others\\ChocCakeWithEdges.jpg", img2WithEdges)
+
+#This image is from edgeDetection
+img = cv2.imread("C:\\Users\\gcheru200\\Pictures\\others\\ChocCakeWithEdges.jpg")
+
+print("Input image shape - ", img.shape)
+#img = cv2.imread("C:\\Users\\gcheru200\\Pictures\\yeppie\\yeppie1.png")
 # Plot the input image
-imgplot = plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+#imgplot = plt.imshow(cv2.cvtColor(img2, cv2.COLOR_BGR2RGBA))
+imgplot = plt.imshow(img)
 plt.show()
 
 '''
@@ -37,21 +59,29 @@ fgdModel = np.zeros((1,65),np.float64)
 # Try the rectangle which will enclose the object. 
 #rect = (34,370,340,700)
 ##Apply rectangle up to the size of input image
-rect = (1, 1, img.shape[1], img.shape[0])
+
+# Initialize the rectangle to desired area which can minimize the grabcut time..
+#rect = (1, 1, img.shape[1], img.shape[0])
+rect = (490, 222, 804, 470)
 ##Apply grab cut..
 cv2.grabCut(img,mask,rect,bgdModel,fgdModel,5,cv2.GC_INIT_WITH_RECT)
 
 mask2 = np.where((mask==2)|(mask==0),0,1).astype('uint8')
+#mask2 = np.where((mask==3),255,0).astype('uint8')
 img = img*mask2[:,:,np.newaxis]
+img2 = img2*mask2[:,:,np.newaxis]
 
-# Adding the alpha channel
-tmp2 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-_,alpha2 = cv2.threshold(tmp2,0,255,cv2.THRESH_BINARY) 
-b, g, r = cv2.split(img) 
-rgba = [b,g,r, alpha2] 
-img = cv2.merge(rgba,4)
+# Adding the alpha channel to canny edge image
+img = addAlpha(img)
+## Adding alpha channel to original image
+img2 = addAlpha(img2)
 cv2.imwrite("/home/gch/Desktop/grabcut_out/grabcutout_cv2.png", img)
-cv2.imshow("GrabCut Output", img)
+import PIL 
+from PIL import Image
+imgPil = Image.fromarray(img2)
+print("The image pil - ", imgPil)
+#cv2.imshow("GrabCut Output", cv2.cvtColor(img2, cv2.COLOR_BGRA2RGB))
+cv2.imshow("GrabCut Output", img2)
 cv2.waitKey(0)
 print("The alpha channel dimentions..", img[:,:,3].shape)
 
@@ -61,10 +91,15 @@ import findExtreams as fe
 bbox_coordinates = fe.get_extreams(img)
 print('bbox_coordinates - ' ,bbox_coordinates)
 
+print("Image dimensions with out extreams - ", img.shape)
+
 ## Draw the bbox on top of original image...
-img = img[bbox_coordinates[0][1]:bbox_coordinates[1][1],bbox_coordinates[0][0]:bbox_coordinates[1][0]]
-cv2.imshow('Img with bbox',  img)
-cv2.waitKey(0)
+img = img2[bbox_coordinates[0][1]:bbox_coordinates[1][1],bbox_coordinates[0][0]:bbox_coordinates[1][0]]
+print("Image dimensions with extreams - ", img.shape)
+plt.imshow(img)
+plt.show()
+#cv2.waitKey(0)
+
 
 ## Now we are going to overlay the object on top of background image..
 #background = cv2.imread("/home/gch/Desktop/storeHD.jpg", cv2.IMREAD_UNCHANGED)
@@ -107,8 +142,8 @@ for i in range(dataset_size):
     offset_x = random.randint(0,xlimit)
     offset_y = random.randint(0,ylimit) 
     # debugging loggers
-    #print("The offset x - ", offset_x)
-    #print("The offset y - ", offset_y)
+    print("The offset x - ", offset_x)
+    print("The offset y - ", offset_y)
     background = cv2.imread("C:\\Users\\gcheru200\\Pictures\\others\\big-data-binary.png", cv2.IMREAD_UNCHANGED)
     # Overlaying the object with background image..Kind of alpha blending..
     oi.overlay_image_alpha(background,
@@ -119,20 +154,29 @@ for i in range(dataset_size):
     cv2.waitKey(0)
 
     # Global coordinates with respect to background
-    global_x1 = bbox_coordinates[0][0] + offset_y 
-    global_y1 = bbox_coordinates[0][1] + offset_x
-    global_x2 = bbox_coordinates[1][0] + offset_y
-    global_y2 = bbox_coordinates[1][1] + offset_x
+#     global_x1 = bbox_coordinates[0][0]  
+#     global_y1 = bbox_coordinates[0][1] 
+#     global_x2 = bbox_coordinates[1][0] + offset_y
+#     global_y2 = bbox_coordinates[1][1] + offset_x
+
+    global_x1 = offset_y
+    global_y1 = offset_x 
+    global_x2 = img.shape[1] + offset_y
+    global_y2 = img.shape[0] + offset_x
     
     
     # debugging loggers
-    #print("The global coordinates w.r.to background..")
-    #print(global_x1,global_y1)
-    #print(global_x2,global_y2)
+    print("The global coordinates w.r.to background..")
+    print(global_x1,global_y1)
+    print(global_x2,global_y2)
     
     ## draw bbox on final image to get a final picture
-    FinalImage_with_bbox = cv2.rectangle(background, (global_x1, global_y1), (global_x2, global_y2), (255,0,0), 2)
+    FinalImage_with_bbox = cv2.rectangle(background, (global_x1, global_y1), (global_x2, global_y2), (0,0,255), 2)
 
+    plt.imshow(cv2.cvtColor(FinalImage_with_bbox, cv2.COLOR_BGR2RGB))
+    plt.show()
+    plt.imshow(cv2.cvtColor(background, cv2.COLOR_BGR2RGB))
+    plt.show()
     ##Show the output image
     cv2.imshow("FinalImage_with_bbox ", FinalImage_with_bbox )
     cv2.waitKey(0)
@@ -171,5 +215,3 @@ for i in range(dataset_size):
     # debugging loggers !!!
     print("Completed saving the annotation.." + product_name + "_" + str(i) + ".xml")
 print("Completed..")
-
-
