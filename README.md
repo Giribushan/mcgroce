@@ -1,4 +1,6 @@
 # mcgroce
 
  - Applied the fix for rectangle correction.
- - Still the white edges needs to be removed. 
+ - Included edge detection in the pipeline.
+ - Given some tunable variants like bgFgSetSize, variation_size, reuseSameBG.
+ - Adjusted annotations to support multiple objs
