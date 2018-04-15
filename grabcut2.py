@@ -21,9 +21,12 @@ def addAlpha(img):
 bbox_coordinates = []
 # change the name as per the product 
 product_name = "ChocolateCake"
+product_name = "tataSalt"
 
 # Object folder path
-objFolderPath = "C:\\Users\\gcheru200\\Pictures\\chocCake"
+#objFolderPath = "C:\\Users\\gcheru200\\Pictures\\chocCake"
+#objFolderPath = "C:\\Users\\gcheru200\\Pictures\\stabCake"
+objFolderPath = "C:\\Users\\gcheru200\\Pictures\\tts"
 #Background Images folder path
 bgFolderPath = "C:\\Users\\gcheru200\\Pictures\\bg_selected"
 
@@ -32,9 +35,13 @@ bgFgSetSize = 5
 
 ## variation_size is to specify as many number of variations as you want for a single (Foreground+Background)
 #variation_size = 300
-variation_size = 1
+variation_size = 2
+
+# flag to reuse the same bg, for multiple variations
+reuseSameBG = True
 
 for j in range(bgFgSetSize):
+    i = 0
     bbox_coordinates = []
     objImagePath = os.path.join(objFolderPath,random.choice(os.listdir(objFolderPath)))
     bgImagePath = os.path.join(bgFolderPath,random.choice(os.listdir(bgFolderPath)))
@@ -102,7 +109,7 @@ for j in range(bgFgSetSize):
     #background = cv2.imread("C:\\Users\\gcheru200\\Pictures\\others\\big-data-binary.png", cv2.IMREAD_UNCHANGED)
     #print("The background image to be read - ", bgImagePath)
     background = cv2.imread(bgImagePath, cv2.IMREAD_UNCHANGED)
-    freshBackGround = copy.copy(background)
+    freshBackGround = cv2.imread(bgImagePath, cv2.IMREAD_UNCHANGED)
     #imgplot = plt.imshow(cv2.cvtColor(background, cv2.COLOR_BGR2RGB))
     #plt.show()
     
@@ -125,12 +132,27 @@ for j in range(bgFgSetSize):
     import matplotlib.pyplot as plt
     import xml.etree.cElementTree as ET
     alpha = inputObj[:, :, 3]
-    
+    if variation_size > 1:
+        stackObjAnnts = True
+    else:
+        stackObjAnnts = False
+    #objTemp = null
+    objTemp = ET.SubElement(ET.Element("annotation"), "object")
     for i in range(variation_size):
         ## picking the random coordinates with in the background range..
-        i += j 
-        if variation_size > 1:
+        #i += j
+        print("i value - ", str(i))
+        print("j value - ", str(j)) 
+        if variation_size > 1 and reuseSameBG:
+            # reusing the same background
+            background = background
+        elif variation_size > 1 and not reuseSameBG:
+            # read the fresh background
+            freshBackGround = cv2.imread(bgImagePath, cv2.IMREAD_UNCHANGED)
             background = freshBackGround
+            cv2.imshow("The bg", freshBackGround)
+            cv2.waitKey(0)
+            
         offset_x = random.randint(0,xlimit)
         offset_y = random.randint(0,ylimit) 
         # debugging loggers
@@ -173,7 +195,7 @@ for j in range(bgFgSetSize):
         ## Now we are going to parse the bbox coordinates to Pascal VOC annotation format.
         root = ET.Element("annotation")
         ET.SubElement(root, "folder").text = "folder"
-        ET.SubElement(root, "filename").text = product_name + "_" + str(i) + ".jpg"
+        fn = ET.SubElement(root, "filename").text = product_name + "_fb" + str(j)+ "_v" + str(i) + ".jpg"
         ET.SubElement(root, "path").text = "path"
         source = ET.SubElement(root, "source")
         ET.SubElement(source, "database").text = "Unknown"
@@ -183,7 +205,9 @@ for j in range(bgFgSetSize):
         ET.SubElement(size, "depth").text = str(3)
         ET.SubElement(root, "segmented").text = str(0)
         obj = ET.SubElement(root, "object")
-    
+        if i !=  0 and reuseSameBG:
+            root.append(objTemp)
+        
         ET.SubElement(obj, "name").text = product_name 
         ET.SubElement(obj, "pose").text = "Unspecified"
         ET.SubElement(obj, "truncated").text = str(0)
@@ -194,7 +218,8 @@ for j in range(bgFgSetSize):
         ET.SubElement(bbx, "ymin").text = str(global_y1)
         ET.SubElement(bbx, "xmax").text = str(global_x2)
         ET.SubElement(bbx, "ymax").text = str(global_y2)
-    
+        if reuseSameBG:
+            objTemp = copy.copy(obj)
     
         tree = ET.ElementTree(root)
         tree.write("C:\\Users\\gcheru200\\Pictures\\others\\Annotaions\\" + product_name + "_" + "fb" + str(j)+ "_v" + str(i) + ".xml")
