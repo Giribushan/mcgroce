@@ -20,27 +20,35 @@ def addAlpha(img):
 # bbox coordinates
 bbox_coordinates = []
 # change the name as per the product 
-product_name = "ChocolateCake"
-product_name = "tataSalt"
+#product_name = "ChocolateCake"
+#product_name = "tataSalt"
+product_name = "strawberryCake"
 
 # Object folder path
 #objFolderPath = "C:\\Users\\gcheru200\\Pictures\\chocCake"
 #objFolderPath = "C:\\Users\\gcheru200\\Pictures\\stabCake"
-objFolderPath = "C:\\Users\\gcheru200\\Pictures\\tts"
+#objFolderPath = "C:\\Users\\gcheru200\\Pictures\\tts"
+objFolderPath = '/home/sathish/Grocery/StrabCakeUnchanged'
+
 #Background Images folder path
-bgFolderPath = "C:\\Users\\gcheru200\\Pictures\\bg_selected"
+bgFolderPath = "/home/sathish/Grocery/bg"
+#bgFolderPath = "C:\\Users\\gcheru200\\Pictures\\bg_selected"
 
 #bgFgSetSize is to set many number of diverse (background+Foreground) as you want in the training
-bgFgSetSize = 5
+bgFgSetSize = 300
 
 ## variation_size is to specify as many number of variations as you want for a single (Foreground+Background)
 #variation_size = 300
-variation_size = 2
+variation_size = 1
 
 # flag to reuse the same bg, for multiple variations
 reuseSameBG = True
 
-for j in range(bgFgSetSize):
+#Previous values
+bgFgSetSizeOld = 0
+variation_sizeOld = 0
+
+for j in range(bgFgSetSizeOld, bgFgSetSizeOld+bgFgSetSize):
     i = 0
     bbox_coordinates = []
     objImagePath = os.path.join(objFolderPath,random.choice(os.listdir(objFolderPath)))
@@ -138,7 +146,7 @@ for j in range(bgFgSetSize):
         stackObjAnnts = False
     #objTemp = null
     objTemp = ET.SubElement(ET.Element("annotation"), "object")
-    for i in range(variation_size):
+    for i in range(variation_sizeOld, variation_sizeOld+variation_size):
         ## picking the random coordinates with in the background range..
         #i += j
         print("i value - ", str(i))
@@ -150,8 +158,8 @@ for j in range(bgFgSetSize):
             # read the fresh background
             freshBackGround = cv2.imread(bgImagePath, cv2.IMREAD_UNCHANGED)
             background = freshBackGround
-            cv2.imshow("The bg", freshBackGround)
-            cv2.waitKey(0)
+            #cv2.imshow("The bg", freshBackGround)
+            #cv2.waitKey(0)
             
         offset_x = random.randint(0,xlimit)
         offset_y = random.randint(0,ylimit) 
@@ -189,7 +197,8 @@ for j in range(bgFgSetSize):
         ##Show the output image
         #cv2.imshow("FinalImage_with_bbox ", FinalImage_with_bbox )
         #cv2.waitKey(0)
-        cv2.imwrite('C:\\Users\\gcheru200\\Pictures\\others\\Images\\' + product_name + "_fb" + str(j)+ "_v" + str(i) + ".jpg", background)
+        #cv2.imwrite('C:\\Users\\gcheru200\\Pictures\\others\\Images\\' + product_name + "_fb" + str(j)+ "_v" + str(i) + ".jpg", background)
+        cv2.imwrite('/home/sathish/Grocery/StrabCake/Imgs/' + product_name + "_fb" + str(j)+ "_v" + str(i) + ".jpg", background)
         #print("Saved training image as => " + 'C:\\Users\\gcheru200\\Pictures\\others\\Images\\' + product_name + "_" + str(i) + ".jpg")
     
         ## Now we are going to parse the bbox coordinates to Pascal VOC annotation format.
@@ -222,12 +231,16 @@ for j in range(bgFgSetSize):
             objTemp = copy.copy(obj)
     
         tree = ET.ElementTree(root)
-        tree.write("C:\\Users\\gcheru200\\Pictures\\others\\Annotaions\\" + product_name + "_" + "fb" + str(j)+ "_v" + str(i) + ".xml")
+        #tree.write("C:\\Users\\gcheru200\\Pictures\\others\\Annotaions\\" + product_name + "_" + "fb" + str(j)+ "_v" + str(i) + ".xml")
+        tree.write('/home/sathish/Grocery/StrabCake/Anns/' + product_name + "_" + "fb" + str(j)+ "_v" + str(i) + ".xml")
         # debugging loggers !!!
         #print("Saved annotation as => " + "C:\\Users\\gcheru200\\Pictures\\others\\Annotaions\\" + product_name + "_" + str(i) + ".xml")
     cv2.destroyAllWindows()
 print("Completed..")
-    
+bgFgSetSizeOld += bgFgSetSize
+print("The bgFgSetCount - ", bgFgSetSizeOld)
+variation_sizeOld += variation_size
+print("The variation_sizeCount - ", variation_sizeOld)    
 '''
 #cv2.imwrite("/home/gch/Desktop/grabcut_out/backandwhite_mask.png", img)
 #import scipy.misc
