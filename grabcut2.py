@@ -26,16 +26,16 @@ product_name = "strawberryCake"
 
 # Object folder path
 #objFolderPath = "C:\\Users\\gcheru200\\Pictures\\chocCake"
-#objFolderPath = "C:\\Users\\gcheru200\\Pictures\\stabCake"
+objFolderPath = "C:\\Users\\gcheru200\\Pictures\\stabCake"
 #objFolderPath = "C:\\Users\\gcheru200\\Pictures\\tts"
-objFolderPath = '/home/sathish/Grocery/StrabCakeUnchanged'
+#objFolderPath = '/home/sathish/Grocery/StrabCakeUnchanged'
 
 #Background Images folder path
-bgFolderPath = "/home/sathish/Grocery/bg"
-#bgFolderPath = "C:\\Users\\gcheru200\\Pictures\\bg_selected"
+#bgFolderPath = "/home/sathish/Grocery/bg"
+bgFolderPath = "C:\\Users\\gcheru200\\Pictures\\bg_selected"
 
 #bgFgSetSize is to set many number of diverse (background+Foreground) as you want in the training
-bgFgSetSize = 300
+bgFgSetSize = 15
 
 ## variation_size is to specify as many number of variations as you want for a single (Foreground+Background)
 #variation_size = 300
@@ -197,8 +197,8 @@ for j in range(bgFgSetSizeOld, bgFgSetSizeOld+bgFgSetSize):
         ##Show the output image
         #cv2.imshow("FinalImage_with_bbox ", FinalImage_with_bbox )
         #cv2.waitKey(0)
-        #cv2.imwrite('C:\\Users\\gcheru200\\Pictures\\others\\Images\\' + product_name + "_fb" + str(j)+ "_v" + str(i) + ".jpg", background)
-        cv2.imwrite('/home/sathish/Grocery/StrabCake/Imgs/' + product_name + "_fb" + str(j)+ "_v" + str(i) + ".jpg", background)
+        cv2.imwrite('C:\\Users\\gcheru200\\Pictures\\others\\Images\\' + product_name + "_fb" + str(j)+ "_v" + str(i) + ".jpg", background)
+        #cv2.imwrite('/home/sathish/Grocery/StrabCake/Imgs/' + product_name + "_fb" + str(j)+ "_v" + str(i) + ".jpg", background)
         #print("Saved training image as => " + 'C:\\Users\\gcheru200\\Pictures\\others\\Images\\' + product_name + "_" + str(i) + ".jpg")
     
         ## Now we are going to parse the bbox coordinates to Pascal VOC annotation format.
@@ -231,8 +231,8 @@ for j in range(bgFgSetSizeOld, bgFgSetSizeOld+bgFgSetSize):
             objTemp = copy.copy(obj)
     
         tree = ET.ElementTree(root)
-        #tree.write("C:\\Users\\gcheru200\\Pictures\\others\\Annotaions\\" + product_name + "_" + "fb" + str(j)+ "_v" + str(i) + ".xml")
-        tree.write('/home/sathish/Grocery/StrabCake/Anns/' + product_name + "_" + "fb" + str(j)+ "_v" + str(i) + ".xml")
+        tree.write("C:\\Users\\gcheru200\\Pictures\\others\\Annotaions\\" + product_name + "_" + "fb" + str(j)+ "_v" + str(i) + ".xml")
+        #tree.write('/home/sathish/Grocery/StrabCake/Anns/' + product_name + "_" + "fb" + str(j)+ "_v" + str(i) + ".xml")
         # debugging loggers !!!
         #print("Saved annotation as => " + "C:\\Users\\gcheru200\\Pictures\\others\\Annotaions\\" + product_name + "_" + str(i) + ".xml")
     cv2.destroyAllWindows()
