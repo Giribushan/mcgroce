@@ -59,6 +59,7 @@ def get_extreams(image):
     ##Show the output image
     #cv2.imshow("bbox_image", image)
     #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
     #cv2.imwrite("/home/gch/Desktop/temp_out/extreamPtsWithBbox.jpg", image)
     
     # debugging loggers

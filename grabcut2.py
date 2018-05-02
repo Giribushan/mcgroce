@@ -6,6 +6,8 @@ import findExtreams as fe
 import os
 import random
 import copy
+#import ImageAugmentation as ia
+
 #from curses.textpad import rectangle
 
 def addAlpha(img):
@@ -22,11 +24,13 @@ bbox_coordinates = []
 # change the name as per the product 
 #product_name = "ChocolateCake"
 #product_name = "tataSalt"
-product_name = "strawberryCake"
+# product_name = "strawberryCake"
+product_name = "yipee"
 
 # Object folder path
 #objFolderPath = "C:\\Users\\gcheru200\\Pictures\\chocCake"
-objFolderPath = "C:\\Users\\gcheru200\\Pictures\\stabCake"
+#objFolderPath = "C:\\Users\\gcheru200\\Pictures\\stabCake"
+objFolderPath = "C:\\Users\\gcheru200\\Documents\\mcgroce\\yipee"
 #objFolderPath = "C:\\Users\\gcheru200\\Pictures\\tts"
 #objFolderPath = '/home/sathish/Grocery/StrabCakeUnchanged'
 
@@ -52,6 +56,7 @@ for j in range(bgFgSetSizeOld, bgFgSetSizeOld+bgFgSetSize):
     i = 0
     bbox_coordinates = []
     objImagePath = os.path.join(objFolderPath,random.choice(os.listdir(objFolderPath)))
+    #print("The image path - ", objImagePath)
     bgImagePath = os.path.join(bgFolderPath,random.choice(os.listdir(bgFolderPath)))
     #This is the input image with object alone..
     inputObj = cv2.imread(objImagePath)
@@ -61,20 +66,20 @@ for j in range(bgFgSetSizeOld, bgFgSetSizeOld+bgFgSetSize):
     # Perfrom edge detection
     img = cv2.Canny(inputObj, 100, 255)
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+    ## store the edged image information for later use..
+    image_edge = copy.copy(img)
+    #cv2.imshow("Edged image", image_edge)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
     
-    #print("The edges shape - ", img.shape)
-    #imgplot = plt.imshow(img)
-    #plt.show()
-    bbox_coordinates = fe.get_extreams(img)
+    #get the extreams
+    bbox_coordinates = fe.get_extreams(image_edge)
     
     #Using these coordinates to initialize the rectangle for grabcut
-    rect = (bbox_coordinates[0][0], bbox_coordinates[0][1], bbox_coordinates[1][0] - bbox_coordinates[0][0], bbox_coordinates[1][1] - bbox_coordinates[0][1])
-    
-    #print("Input image shape - ", img.shape)
-    #imgplot = plt.imshow(cv2.cvtColor(inputObj, cv2.COLOR_BGR2RGBA))
-    # imgplot = plt.imshow(img)
-    #plt.show()
-    
+    rect = (bbox_coordinates[0][0], 
+            bbox_coordinates[0][1], 
+            bbox_coordinates[1][0] - bbox_coordinates[0][0], 
+            bbox_coordinates[1][1] - bbox_coordinates[0][1])
     
     mask = np.zeros(img.shape[:2],np.uint8)
     bgdModel = np.zeros((1,65),np.float64)
@@ -83,29 +88,27 @@ for j in range(bgFgSetSizeOld, bgFgSetSizeOld+bgFgSetSize):
     #rect = (1, 1, img.shape[1], img.shape[0])
     cv.grabCut(inputObj,mask,rect,bgdModel,fgdModel,5,cv.GC_INIT_WITH_RECT)
     mask2 = np.where((mask==2)|(mask==0),0,1).astype('uint8')
-    img = img*mask2[:,:,np.newaxis]
+    #img = img*mask2[:,:,np.newaxis]
     inputObj = inputObj*mask2[:,:,np.newaxis]
     #cv2.imshow("grabcutOut", inputObj)
     #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
     
     # Adding the alpha channel to Canny edge image
     img = addAlpha(img)
     ## Adding alpha channel to Original image
     inputObj = addAlpha(inputObj)
     
-    #cv2.imshow("GrabCut Output", inputObj)
-    #cv2.waitKey(0)
-    #print("The alpha channel dimentions..", img[:,:,3].shape)
-    
-    ## Now we are going to get the bbox coordinates as per the grabcut output
+    ## Now we are going to get the bbox coordinates as per the edged image output
     bbox_coordinates = fe.get_extreams(img)
+    #bbox_coordinates = fe.get_extreams(img)
     # debugging loggers
     #print('bbox_coordinates - ' ,bbox_coordinates)
     
     #print("Image dimensions with out extreams - ", img.shape)
     ## Cropping the images as per the extream points..
     inputObj = inputObj[bbox_coordinates[0][1]:bbox_coordinates[1][1],bbox_coordinates[0][0]:bbox_coordinates[1][0]]
-    #img = img[bbox_coordinates[0][1]:bbox_coordinates[1][1],bbox_coordinates[0][0]:bbox_coordinates[1][0]]
+    img = img[bbox_coordinates[0][1]:bbox_coordinates[1][1],bbox_coordinates[0][0]:bbox_coordinates[1][0]]
     #print("Image dimensions with extreams - ", img.shape)
     
     #plt.imshow(inputObj)
@@ -149,8 +152,8 @@ for j in range(bgFgSetSizeOld, bgFgSetSizeOld+bgFgSetSize):
     for i in range(variation_sizeOld, variation_sizeOld+variation_size):
         ## picking the random coordinates with in the background range..
         #i += j
-        print("i value - ", str(i))
-        print("j value - ", str(j)) 
+        print("fg variance number - ", str(i))
+        print("bg set number - ", str(j)) 
         if variation_size > 1 and reuseSameBG:
             # reusing the same background
             background = background
@@ -160,14 +163,26 @@ for j in range(bgFgSetSizeOld, bgFgSetSizeOld+bgFgSetSize):
             background = freshBackGround
             #cv2.imshow("The bg", freshBackGround)
             #cv2.waitKey(0)
-            
-        offset_x = random.randint(0,xlimit)
-        offset_y = random.randint(0,ylimit) 
+        if xlimit > 0 and ylimit > 0:
+            offset_x = random.randint(0,xlimit)
+            offset_y = random.randint(0,ylimit) 
+        else:
+            print("The offset for input object could not be picked..")
+            pass
         # debugging loggers
         #print("The offset x - ", offset_x)
         #print("The offset y - ", offset_y)
         # Overlaying the object with background image..Kind of alpha blending..
         # So the background image will be manipulated and can be used for training!!!!
+        #print("Overlaying images ...")
+#         cv2.imshow("bg", background)
+#         cv2.waitKey(0)
+#         cv2.destroyAllWindows()
+#         cv2.imshow("inputObj", inputObj)
+#         cv2.waitKey(0)
+#         cv2.destroyAllWindows()
+#         
+        
         oi.overlay_image_alpha(background,
                         inputObj[:, :, 0:4],
                         (offset_x, offset_y),
@@ -197,6 +212,7 @@ for j in range(bgFgSetSizeOld, bgFgSetSizeOld+bgFgSetSize):
         ##Show the output image
         #cv2.imshow("FinalImage_with_bbox ", FinalImage_with_bbox )
         #cv2.waitKey(0)
+        # Lets apply the Guassian noise randomly    
         cv2.imwrite('C:\\Users\\gcheru200\\Pictures\\others\\Images\\' + product_name + "_fb" + str(j)+ "_v" + str(i) + ".jpg", background)
         #cv2.imwrite('/home/sathish/Grocery/StrabCake/Imgs/' + product_name + "_fb" + str(j)+ "_v" + str(i) + ".jpg", background)
         #print("Saved training image as => " + 'C:\\Users\\gcheru200\\Pictures\\others\\Images\\' + product_name + "_" + str(i) + ".jpg")
