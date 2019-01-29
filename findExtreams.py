@@ -6,7 +6,7 @@ def get_extreams(image):
     #debugging loggers
     #print("Entered find extreams method..")
     ## load the image nd convert it grey sclae and blur it a bit
-    #image = cv2.imread("/home/gch/Desktop/hand.jpg")
+    image = cv2.imread("/home/gch/Desktop/hand.jpg")
     #image = cv2.imread("/home/gch/Desktop/grabcut_out/grabcutout_cv2.png")
     #print("Image in findExtreams - ", image)
     ##resizing the image...!!
